@@ -7,7 +7,7 @@ var colors = require('colors'),
 var FFMPEG_TIMEOUT = 15000;
 var BROWSER_FFMPEG_OPTS = [
 	'-y',
-	'-ss 0',
+	'-ss 2000',
 	'-threads 0',
 	'-vcodec libx264',
 	'-pix_fmt yuv420p',
@@ -20,7 +20,6 @@ var BROWSER_FFMPEG_OPTS = [
 	'-rtbufsize 1000k', 
 	'-maxrate 620k',
 	'-deinterlace',
-	'-crf 20',
 	'-f flv'];
 
 var MOBILE_FFMPEG_OPTS = [
@@ -81,7 +80,7 @@ exports.startPlayback = function(response, movieUrl, movieFile, platform) {
 
 /* Private Methods */
 startBrowserPlayback = function(response, movieUrl, movieFile) {
-	response.writeHead(200, { 'Content-Type':'video/flv', 'Content-Length': movieFile.size });
+/*	response.writeHead(200, { 'Content-Type':'video/flv', 'Content-Length': movieFile.size });
 
 	probe(movieUrl, function(err, probeData) {
 		if (err){
@@ -93,6 +92,7 @@ startBrowserPlayback = function(response, movieUrl, movieFile) {
 			startMovieStreaming(response, movieUrl, BROWSER_FFMPEG_OPTS.concat([metaDuration, tDuration]));
 		}
 	});
+*/
 };
 
 startIOSPlayback = function(response, movieUrl, movieFile) {

@@ -320,14 +320,7 @@
 					myVideo.onended = function(e){window.location="/movies/";}
 					
 				} else if(platform === 'browser'){
-					$('body').append('<video id="player" class="video-js vjs-default-skin" controls preload="auto" width="100%" height="100%" data-setup="{"techOrder": ["flash"]}" > <source src="'+url+'" type="video/flv"></video>');
-
-					videojs('player').ready(function(){
-						myPlayer = this;
-						myPlayer.play();
-						myPlayer.on('error', function(e){ console.log('Error', e) });
-						myPlayer.on('ended', function(e){ window.location="/movies/"; });
-					});
+					$('body').append('<embed type="application/x-vlc-plugin" name="player" autoplay="yes" loop="no" width="100%" height="100%" target="'+url+'" />');
 				}
 			}
 		});
