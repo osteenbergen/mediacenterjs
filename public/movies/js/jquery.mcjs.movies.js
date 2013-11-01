@@ -320,6 +320,7 @@
 					myVideo.onended = function(e){window.location="/movies/";}
 					
 				} else if(platform === 'browser'){
+					$('body').addClass('playing')
 					$('body').append('<embed type="application/x-vlc-plugin" name="player" autoplay="yes" loop="no" width="100%" height="100%" target="'+url+'" />');
 				}
 			}

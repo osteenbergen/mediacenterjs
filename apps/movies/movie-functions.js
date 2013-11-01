@@ -46,21 +46,12 @@ exports.loadItems = function (req, res){
 };
 
 exports.playMovie = function (req, res, platform, movieRequest){
-	//var movie_playback_handler = require('./movie-playback-handler');
-
-	var stream = fs.createReadStream(config.moviepath+movieRequest);
-	stream.pipe(res);
-	
-	
-	file_utils.getLocalFile(config.moviepath, movieRequest, function(err, file) {
-	
-		console.log(err)
-		console.log(file)
-		if (err) console.log(err .red);
-		
-		
-		if (file) {
-			var movieUrl = file.href;
+	file_utils.getLocalFiles(config.moviepath, movieRequest, function(err, file) {
+		if (err){
+            console.log('Error getting files', err)
+        } else{
+			var stream = fs.createReadStream(file[0].href);
+			stream.pipe(res);
 		}
 	});
 };
