@@ -24,11 +24,14 @@ var express = require('express')
 	, lingua = require('lingua')
 	, colors = require('colors')
 	, rimraf = require('rimraf')
-	, dblite = require('dblite')
 	, mcjsRouting = require('./lib/routing/routing')
 	, remoteControl = require('./lib/utils/remote-control')
+	, versionChecker = require('./lib/utils/version-checker')
+	, Youtube = require('youtube-api')
+    , http = require('http')
+	, jade = require('jade')
 	, configuration_handler = require('./lib/handlers/configuration-handler');
-	
+
 var config = configuration_handler.initializeConfiguration();
 
 var language = null;
@@ -44,7 +47,8 @@ app.configure(function(){
 	app.set('view engine', 'jade');
 	app.set('views', __dirname + '/views');
 	app.setMaxListeners(100);
-	app.use(express.bodyParser());
+    app.use(express.json());
+    app.use(express.urlencoded());
 	app.use(express.methodOverride());
 	app.use(express.static(__dirname + '/public'));
 	app.use(express.favicon(__dirname + '/public/core/favicon.ico'));
@@ -60,6 +64,7 @@ app.configure(function(){
 	}));
 	app.use(app.router);
 	app.locals.pretty = true;
+	app.locals.basedir = __dirname + '/views';
 });
 
 /* CORS */
@@ -70,10 +75,22 @@ app.all('*', function(req, res, next) {
 });
 
 /*Chmod files*/
-fs.chmodSync('./bin/ffmpeg/ffmpeg', 0755);
-fs.chmodSync('./bin/sqlite3/sqlite3', 0755);
-fs.chmodSync('./bin/sqlite3/osx/sqlite3', 0755);
-fs.chmodSync('./lib/database/mcjs.sqlite', 0755);
+if(fs.existsSync('./bin/ffmpeg/ffmpeg') === true){
+    fs.chmodSync('./bin/ffmpeg/ffmpeg', 0755);
+}
+if(fs.existsSync('./bin/sqlite3/sqlite3') === true){
+    fs.chmodSync('./bin/sqlite3/sqlite3', 0755);
+}
+if(fs.existsSync('./bin/sqlite3/osx/sqlite3') === true){
+    fs.chmodSync('./bin/sqlite3/osx/sqlite3', 0755);
+}
+if(fs.existsSync('./lib/database/mcjs.sqlite') === true){
+    fs.chmodSync('./lib/database/mcjs.sqlite', 0755);
+} else {
+    fs.mkdirSync('./lib/database/');
+    fs.openSync('./lib/database/mcjs.sqlite', 'w');
+    fs.chmodSync('./lib/database/mcjs.sqlite', 0755);
+}
 
 app.configure('development', function(){   
 	app.enable('verbose errors');
@@ -93,9 +110,7 @@ app.use(function(req, res) {
 });
 
 app.get("/", function(req, res, next) {  
-	if(	config.moviepath == '' && config.language == '' && config.location == '' ||
-        config.moviepath == null ||
-        config.moviepath == undefined){
+	if(	 config.language === '' || config.location === '' || config.moviepath === undefined){
 
 		var localIP = getIPAddresses()
 		, sendLocalIP = '';
@@ -106,25 +121,35 @@ app.get("/", function(req, res, next) {
 		
 		if(localIP[0] !== undefined && localIP[0] !==  null){
 			sendLocalIP = localIP[0];
-			}
+		}
 
 		res.render('setup',{
 			localIP:sendLocalIP
 		});	
 		
 	} else {
-		
+
 		var apps = [];
 
 		//Search core app folder for apps and check if tile icon is present
 		fs.readdirSync(__dirname + '/apps').forEach(function(name){
+
 			if(fs.existsSync(__dirname + '/public/'+name+'/tile.png')){
 				var obj = {
 					appLink: name, 
 					tileLink: name
 				}
-				apps.push(obj);
+                if(name === 'movies' && config.moviepath === ""){
+                    return;
+                } else if(name === 'music' && config.musicpath === "" ){
+                    return;
+                } else if(name === 'tv' && config.tvpath === "" ){
+                    return;
+                } else {
+                    apps.push(obj);
+                }
 			}
+
 		});
 
 		//search node_modules for plugins
@@ -207,29 +232,41 @@ app.post('/clearCache', function(req, res){
 			console.log('Error removing module', e .red);
 			return res.send('Error clearing cache', e);
 		}
-		// Init Database
-		if(config.platform === 'OSX'){
-			dblite.bin = "./bin/sqlite3/osx/sqlite3";
-		}else {
-			dblite.bin = "./bin/sqlite3/sqlite3";
-		}
-		var db = dblite('./lib/database/mcjs.sqlite');
 
-		db.query('DROP TABLE IF EXISTS ' + cache);
+        // Init Database
+        var dblite = require('dblite')
+        if(config.binaries === 'packaged'){
+            if(config.platform === 'OSX'){
+                dblite.bin = "./bin/sqlite3/osx/sqlite3";
+            }else {
+                dblite.bin = "./bin/sqlite3/sqlite3";
+            }
+        }
+        var db = dblite('./lib/database/mcjs.sqlite');
+        db.on('info', function (text) { console.log(text) });
+        db.on('error', function (err) {
+            if(config.binaries !== 'packaged'){
+                console.log('You choose to use locally installed binaries instead of the binaries included. /n Please install them. Eg type "apt-get install sqlite3"');
+            }
+            console.error('Database error: ' + err)
+        });
 
-		db.on('info', function (text) { console.log(text) });
-		db.on('error', function (err) { console.error('Database error: ' + err) });
+        db.query('DROP TABLE IF EXISTS ' + cache);
 
 		return res.send('done');
 	});
 });
+
+app.get('/checkForUpdate', function(req, res){
+	versionChecker.checkVersion(req, res, true);
+});
+
 
 app.post('/setuppost', function(req, res){
 	configuration_handler.saveSettings(req.body, function() {
 		res.render('finish');
 	});
 });
-
 // Form  handlers
 
 app.get('/configuration', function(req, res){
@@ -237,7 +274,6 @@ app.get('/configuration', function(req, res){
 });
 	
 app.post('/submit', function(req, res){
-	console.log('asdsa',req.body);
 	configuration_handler.saveSettings(req.body, function() {
 		res.redirect('/');
 	});
@@ -257,9 +293,10 @@ app.set('port', process.env.PORT || 3000);
 // Open App socket
 if (config.port == "" || config.port == undefined ){
 	var defaultPort = app.get('port');
-	console.log('First run, Setup running on localhost:'+defaultPort);
+	console.log('First run, Setup running on localhost:' + defaultPort);
 	app.listen(parseInt(defaultPort));
 } else{
-	console.log("MediacenterJS listening on port:", config.port .green.bold); 
+	var message = "MediacenterJS listening on port:" + config.port;
+	console.log(message.green.bold);
 	app.listen(parseInt(config.port));
 }
