@@ -10,12 +10,12 @@ Website: http://www.mediacenterjs.com
 Status: 
 =======
 
-__Heavy work in progress, Alpha version (0.0.50)__
+__Heavy work in progress, Alpha version (0.0.51)__
 
-__version 0.0.50__
-* Greatly improved video playback
-* Operational plugin manager
-* Improved GUI
+__version 0.0.51__
+* Styling fixes
+* Weather app fixes (Thanks to Hoffi)
+* Added YouTube app (Thanks to Brutalhonesty)
 
 Why use it?
 ===========
@@ -47,20 +47,24 @@ What currently works?
 * Remote control
 * Plugin manager
 * Page visibility API
+* YouTube app
 
 What's coming up
 ==================
 * Tv show app functionality
+* Better Music app functionality
 * Better inbrowser streaming
 
 Known issues: video/audio playback
 ==================
 
+* Currently the music app is in heavy development so functionality can be broken.
+
 These issues are known issues and current browser/platform limitations.
 I'm trying to figure out how to get around these limitations.
 
 * IOS: Video is not seekable
-* Browser: HD videos still take a lot of processing power.
+* Browser: Duration and playback length are often not valid. This is due to the fact that the transcoding process is still in heavy development.
 * Android: not seekable & mp3 playback not working
 * Ubuntu: Audio playback of mp3 not supported by default
 
@@ -111,9 +115,10 @@ Or browse to the root directory of MediaCenterJS in the terminal/command prompt 
 
 If you close this window, MCJS will stop working. You can also see useful information about what the server is doing, including error messages and other useful information.
 
-__Please make sure you've installed NodeJS and FFmpeg first!__
+__Please make sure you've installed NodeJS first!__
 
-Ffmpeg binaries for Linux and Windows are included.
+Ffmpeg binaries for Linux/OSX and Windows are included so no need to install them seperately. 
+If for some reason this is still needed, this is how you can accomplish it:
 
 User guide for installing FFmpeg on Windows: (http://www.wikihow.com/Install-FFmpeg-on-Windows)
 User guide for installing FFmpeg on Linux: (http://linuxers.org/tutorial/how-install-ffmpeg-linux)
@@ -121,9 +126,6 @@ User guide for installing FFmpeg on Linux: (http://linuxers.org/tutorial/how-ins
 Install NodeJS: http://nodejs.org/download/  (minimal version 0.10.x)
 
 __Install node on Ubuntu/Debian/OSX__
-
-
-	Ubuntu: gksu software-properties-gtk (enable all software sources)
 
 	sudo apt-get update
 	sudo apt-get install python-software-properties python g++ make
@@ -137,10 +139,9 @@ __Install node on Ubuntu/Debian/OSX__
 	cd mediacenterjs
 	npm install
 	
-	sudo node server
+	node server
+	Use 'sudo node server' if you use a port below 1000
 
-	// NPM install
-	npm install mediacenterjs
 
 The program will boot in setup mode, being accessible on localhost:3000 or 'IP of the server':3000.
 
@@ -375,11 +376,12 @@ This app makes heavy use of:
 ###Special thanks to:###
 
 * Sylvain https://github.com/flyinva for his French translation
+* Adam https://github.com/brutalhonesty for his YouTube App
 * Luis Eduardo Brito https://github.com/luiseduardobrito for his Portuguese translation
 * Kasper Isager https://github.com/kasperisager for his Danish translation
 * Jussi Vatjus https://github.com/jupe for his code support
 * Terry MooreII https://github.com/TerryMooreII For the Javascript Jabber app and building the Plugin manager
-* Stefan Hoffman https://github.com/hoffi for his hudge contribution to the backend
+* Stefan Hoffman https://github.com/hoffi for his hudge contribution to the backend and German translation 
 * Matthew Szatmary https://github.com/szatmary for his FFMPEG expertise
 * Richard Bernards https://github.com/RichardBernards for his architectural knowledge/support
 * Lucien Immink https://github.com/lucienimmink for his javascript knowledge/support
